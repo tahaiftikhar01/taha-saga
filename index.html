@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>The Automation Saga — Taha Iftikhar</title>
+<meta name="description" content="The professional legend of Taha Iftikhar — automation engineer, data analyst, founder of MinCac. Played, not read.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Crimson+Pro:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --gold:#d8b46a; --ember:#e2603a; --bone:#e8e0d0; --ink:#0a0e14;
+    --panel:rgba(10,14,20,.92); --edge:rgba(216,180,106,.45);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%;background:#05070b;overflow:hidden;font-family:'Crimson Pro',Georgia,serif;color:var(--bone)}
+  #stage{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
+  canvas{display:block;image-rendering:auto}
+  .serif-caps{font-family:'Cinzel',serif;letter-spacing:.14em;text-transform:uppercase}
+
+  /* ---------- overlays ---------- */
+  .overlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:30}
+  .overlay.show{display:flex}
+
+  /* dialog letterbox */
+  #dialogBox{position:fixed;left:0;right:0;bottom:0;z-index:25;display:none;pointer-events:none}
+  #dialogBox.show{display:block}
+  #dialogInner{max-width:900px;margin:0 auto 5.5vh;padding:18px 28px;background:var(--panel);
+    border:1px solid var(--edge);border-left:4px solid var(--ember)}
+  #dialogSpeaker{font-family:'Cinzel',serif;font-size:14px;letter-spacing:.2em;color:var(--gold);margin-bottom:6px}
+  #dialogText{font-size:20px;line-height:1.45;min-height:56px}
+  #dialogHint{text-align:right;font-size:13px;opacity:.55;margin-top:6px;font-style:italic}
+
+  /* sign / lore card */
+  #signCard .card{max-width:560px;width:92%;background:var(--panel);border:1px solid var(--edge);padding:30px 34px;position:relative}
+  #signCard h2{font-family:'Cinzel',serif;color:var(--gold);font-size:22px;letter-spacing:.1em;margin-bottom:4px}
+  #signCard .rune-line{height:2px;background:linear-gradient(90deg,var(--ember),transparent);margin:10px 0 14px}
+  #signCard p{font-size:18px;line-height:1.5;margin-bottom:10px}
+  #signCard p em{color:var(--gold)}
+  .closeHint{font-size:13px;opacity:.55;font-style:italic;margin-top:14px}
+
+  /* BOTREUS chat */
+  #chatPanel .card{max-width:620px;width:94%;background:var(--panel);border:1px solid var(--edge);padding:26px 30px}
+  #chatPanel h2{font-family:'Cinzel',serif;color:#7de0a0;font-size:20px;letter-spacing:.12em;display:flex;align-items:center;gap:10px}
+  #chatPanel h2::before{content:'';width:12px;height:12px;border-radius:50%;background:#7de0a0;box-shadow:0 0 12px #7de0a0;display:inline-block}
+  #chatAnswer{min-height:96px;font-size:18px;line-height:1.5;margin:16px 0;padding:14px 16px;background:rgba(125,224,160,.06);border-left:3px solid #7de0a0}
+  #chatQs{display:flex;flex-wrap:wrap;gap:8px}
+  #chatQs button{font-family:'Crimson Pro',serif;font-size:16px;padding:8px 14px;background:transparent;color:var(--bone);
+    border:1px solid var(--edge);cursor:pointer;transition:.15s}
+  #chatQs button:hover{background:rgba(216,180,106,.15);border-color:var(--gold)}
+  #chatAnswer a{color:#7de0a0}
+
+  /* title + victory */
+  #titleScreen,#victoryScreen{background:radial-gradient(ellipse at 50% 65%,rgba(226,96,58,.14),transparent 60%),rgba(5,7,11,.6);flex-direction:column;text-align:center;padding:20px}
+  #titleScreen h1,#victoryScreen h1{font-family:'Cinzel',serif;font-weight:800;font-size:clamp(34px,7vw,74px);color:var(--bone);
+    letter-spacing:.08em;text-shadow:0 0 40px rgba(226,96,58,.5)}
+  #titleScreen h1 span,#victoryScreen h1 span{color:var(--ember)}
+  .subtitle{font-size:clamp(16px,2.4vw,24px);font-style:italic;opacity:.85;margin:14px 0 6px}
+  .press{font-family:'Cinzel',serif;font-size:16px;letter-spacing:.25em;color:var(--gold);margin-top:34px;animation:pulse 1.6s infinite}
+  @keyframes pulse{0%,100%{opacity:.45}50%{opacity:1}}
+  .controls{margin-top:26px;font-size:15px;opacity:.7;line-height:1.9}
+  .controls b{color:var(--gold);font-family:'Cinzel',serif;font-size:13px;letter-spacing:.1em}
+  #victoryScreen .links{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;margin-top:26px}
+  #victoryScreen .links a{font-family:'Cinzel',serif;font-size:15px;letter-spacing:.12em;color:var(--bone);text-decoration:none;
+    border:1px solid var(--edge);padding:12px 22px;transition:.15s}
+  #victoryScreen .links a:hover{background:rgba(216,180,106,.15);border-color:var(--gold)}
+
+  /* death */
+  #deathScreen{background:rgba(20,4,4,.75);flex-direction:column;text-align:center}
+  #deathScreen h1{font-family:'Cinzel',serif;font-size:clamp(40px,8vw,80px);color:#c33;letter-spacing:.2em}
+  #deathScreen p{font-size:20px;font-style:italic;margin-top:12px;opacity:.85}
+
+  /* touch controls */
+  #touchUI{position:fixed;inset:0;z-index:20;display:none;pointer-events:none}
+  body.touch #touchUI{display:block}
+  .tbtn{position:absolute;pointer-events:auto;width:64px;height:64px;border-radius:50%;border:2px solid rgba(232,224,208,.4);
+    background:rgba(10,14,20,.5);color:var(--bone);font-family:'Cinzel',serif;font-size:13px;
+    display:flex;align-items:center;justify-content:center;user-select:none;touch-action:none}
+  .tbtn:active{background:rgba(226,96,58,.4)}
+  #tLeft{left:18px;bottom:26px}#tRight{left:98px;bottom:26px}
+  #tJump{right:18px;bottom:100px}#tAtk{right:98px;bottom:26px}#tAxe{right:18px;bottom:26px}
+  #tAct{right:98px;bottom:110px;border-color:var(--gold);color:var(--gold)}
+  #tChat{position:absolute;pointer-events:auto;top:14px;right:14px;width:auto;height:auto;border-radius:4px;padding:8px 12px;font-size:12px}
+</style>
+</head>
+<body>
+<div id="stage"><canvas id="game" width="1280" height="720"></canvas></div>
+
+<div id="dialogBox">
+  <div id="dialogInner">
+    <div id="dialogSpeaker" class="serif-caps"></div>
+    <div id="dialogText"></div>
+    <div id="dialogHint">ENTER / tap to continue</div>
+  </div>
+</div>
+
+<div id="signCard" class="overlay"><div class="card">
+  <h2 id="signTitle"></h2><div class="rune-line"></div>
+  <div id="signBody"></div>
+  <div class="closeHint">ESC / E / tap outside to close</div>
+</div></div>
+
+<div id="chatPanel" class="overlay"><div class="card">
+  <h2>BOTREUS &mdash; retention agent, companion, hype man</h2>
+  <div id="chatAnswer">Ask me of my maker. I have <em>excellent</em> retention.</div>
+  <div id="chatQs"></div>
+  <div class="closeHint">ESC / C to return to the saga</div>
+</div></div>
+
+<div id="titleScreen" class="overlay show">
+  <h1>THE <span>AUTOMATION</span> SAGA</h1>
+  <div class="subtitle">The professional legend of Taha Iftikhar &mdash; played, not read.</div>
+  <div class="press" id="pressStart">Press Enter&nbsp;&nbsp;&mdash;&nbsp;&nbsp;or tap</div>
+  <div class="controls">
+    <b>A / D or ◀ ▶</b> move &nbsp;&nbsp; <b>W / Space</b> jump &nbsp;&nbsp; <b>J</b> strike &nbsp;&nbsp;
+    <b>K</b> throw / recall the Automation Axe<br>
+    <b>E</b> read runestones &amp; open gates &nbsp;&nbsp; <b>C</b> speak with BOTREUS
+  </div>
+</div>
+
+<div id="victoryScreen" class="overlay">
+  <h1>THE SAGA <span>CONTINUES</span></h1>
+  <div class="subtitle" id="victoryText">Churn is slain. The members remain. But every saga needs its next chapter &mdash; and its next ally.</div>
+  <div class="links">
+    <a href="https://www.linkedin.com/in/tahaiftikhar/" target="_blank" rel="noopener">⚔ LinkedIn</a>
+    <a href="https://github.com/tahaiftikhar01" target="_blank" rel="noopener">🛡 GitHub</a>
+    <a href="https://mincac.com" target="_blank" rel="noopener">🔥 MinCac.com</a>
+    <a href="mailto:tahaiftikhar1991@gmail.com">✉ Summon by Raven</a>
+  </div>
+  <div class="press" id="pressRoam">Press Enter / tap to keep roaming the realm</div>
+</div>
+
+<div id="deathScreen" class="overlay">
+  <h1>YOU DIED</h1>
+  <p id="deathQuip">Like all good deadlines, you shall respawn.</p>
+  <div class="press">Press Enter / tap to rise again</div>
+</div>
+
+<div id="touchUI">
+  <div class="tbtn" id="tLeft">◀</div><div class="tbtn" id="tRight">▶</div>
+  <div class="tbtn" id="tJump">JMP</div><div class="tbtn" id="tAtk">ATK</div>
+  <div class="tbtn" id="tAxe">AXE</div><div class="tbtn" id="tAct">E</div>
+  <div class="tbtn" id="tChat">BOTREUS</div>
+</div>
+
+<script src="game.js"></script>
+</body>
+</html>
