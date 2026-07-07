@@ -14,9 +14,35 @@
   }
   *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html,body{height:100%;background:#05070b;overflow:hidden;font-family:'Crimson Pro',Georgia,serif;color:var(--bone)}
-  #stage{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
-  canvas{display:block;image-rendering:auto}
+  #stage{position:fixed;inset:0}
+  canvas{display:block;width:100%;height:100%}
   .serif-caps{font-family:'Cinzel',serif;letter-spacing:.14em;text-transform:uppercase}
+
+  /* ---------- HUD ---------- */
+  #hud{position:fixed;inset:0;z-index:10;pointer-events:none;font-family:'Cinzel',serif}
+  #progress{position:absolute;top:0;left:0;right:0;height:3px;background:rgba(232,224,208,.15)}
+  #progFill{height:100%;width:0;background:var(--gold)}
+  .chapTick{position:absolute;top:0;width:2px;height:6px;background:rgba(232,224,208,.5)}
+  #pstats{position:absolute;top:14px;left:24px}
+  #pname{font-size:13px;letter-spacing:.14em;color:var(--gold)}
+  #hpbar{width:264px;height:14px;background:rgba(0,0,0,.55);border:1px solid var(--edge);margin-top:6px}
+  #hpfill{height:100%;width:100%;background:linear-gradient(90deg,#c03a2a,#e2603a);transition:width .12s}
+  #runeline{margin-top:8px;font-size:15px;color:var(--gold);text-shadow:0 1px 4px #000}
+  #axeState{color:rgba(138,212,240,.9);margin-left:16px}
+  #axeState.away{color:rgba(138,212,240,.4)}
+  #banner{position:absolute;top:16vh;left:0;right:0;text-align:center;opacity:0}
+  #banner .bn{font-size:16px;color:var(--gold);letter-spacing:.3em}
+  #banner .bt{font-weight:800;font-size:clamp(28px,4.5vw,44px);color:var(--bone);letter-spacing:.12em;margin-top:6px;text-shadow:0 0 30px rgba(226,96,58,.45)}
+  #banner .bs{font-family:'Crimson Pro',serif;font-style:italic;font-size:18px;color:rgba(232,224,208,.75);margin-top:6px}
+  #bossWrap{position:absolute;bottom:46px;left:50%;transform:translateX(-50%);width:min(560px,86vw);text-align:center;display:none}
+  #bossName{font-size:15px;color:var(--bone);letter-spacing:.14em;text-shadow:0 1px 6px #000}
+  #bossBar{height:12px;background:rgba(0,0,0,.55);border:1px solid var(--edge);margin-top:6px}
+  #bossFill{height:100%;width:100%;background:#8a2be2;transition:width .1s}
+  #hintLine{position:absolute;bottom:16px;left:0;right:0;text-align:center;font-size:16px;color:rgba(216,180,106,.95);letter-spacing:.06em;text-shadow:0 1px 6px #000}
+  #fx{position:fixed;inset:0;pointer-events:none;z-index:12;overflow:hidden}
+  .dmg{position:absolute;font:bold 19px Cinzel,serif;color:#e8e0d0;transform:translate(-50%,-50%);text-shadow:0 2px 6px #000;white-space:nowrap}
+  .dmg.crit{font-size:27px;color:#f0c060}
+  #ePrompt{position:fixed;width:30px;height:30px;border-radius:50%;background:rgba(10,14,20,.85);border:1.5px solid var(--gold);color:var(--gold);font:bold 14px Cinzel,serif;display:none;align-items:center;justify-content:center;transform:translate(-50%,-50%);z-index:11;pointer-events:none}
 
   /* ---------- overlays ---------- */
   .overlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:30}
@@ -77,14 +103,29 @@
     background:rgba(10,14,20,.5);color:var(--bone);font-family:'Cinzel',serif;font-size:13px;
     display:flex;align-items:center;justify-content:center;user-select:none;touch-action:none}
   .tbtn:active{background:rgba(226,96,58,.4)}
-  #tLeft{left:18px;bottom:26px}#tRight{left:98px;bottom:26px}
+  #tLeft{left:18px;bottom:26px}#tRight{left:170px;bottom:26px}
+  #tUp{left:94px;bottom:96px}#tDown{left:94px;bottom:26px}
   #tJump{right:18px;bottom:100px}#tAtk{right:98px;bottom:26px}#tAxe{right:18px;bottom:26px}
   #tAct{right:98px;bottom:110px;border-color:var(--gold);color:var(--gold)}
   #tChat{position:absolute;pointer-events:auto;top:14px;right:14px;width:auto;height:auto;border-radius:4px;padding:8px 12px;font-size:12px}
 </style>
 </head>
 <body>
-<div id="stage"><canvas id="game" width="1280" height="720"></canvas></div>
+<div id="stage"><canvas id="game"></canvas></div>
+
+<div id="hud">
+  <div id="progress"><div id="progFill"></div></div>
+  <div id="pstats">
+    <div id="pname">TAHA · GOD OF AUTOMATION</div>
+    <div id="hpbar"><div id="hpfill"></div></div>
+    <div id="runeline">ᚱ <span id="runes">0</span><span id="axeState">🪓 AXE READY</span></div>
+  </div>
+  <div id="banner"><div class="bn"></div><div class="bt"></div><div class="bs"></div></div>
+  <div id="bossWrap"><div id="bossName"></div><div id="bossBar"><div id="bossFill"></div></div></div>
+  <div id="hintLine"></div>
+</div>
+<div id="fx"></div>
+<div id="ePrompt">E</div>
 
 <div id="dialogBox">
   <div id="dialogInner">
@@ -112,7 +153,7 @@
   <div class="subtitle">The professional legend of Taha Iftikhar &mdash; played, not read.</div>
   <div class="press" id="pressStart">Press Enter&nbsp;&nbsp;&mdash;&nbsp;&nbsp;or tap</div>
   <div class="controls">
-    <b>A / D or ◀ ▶</b> move &nbsp;&nbsp; <b>W / Space</b> jump &nbsp;&nbsp; <b>J</b> strike &nbsp;&nbsp;
+    <b>W A S D / arrows</b> roam the realm &nbsp;&nbsp; <b>Space</b> jump &nbsp;&nbsp; <b>J</b> strike &nbsp;&nbsp;
     <b>K</b> throw / recall the Automation Axe<br>
     <b>E</b> read runestones &amp; open gates &nbsp;&nbsp; <b>C</b> speak with BOTREUS
   </div>
@@ -138,11 +179,13 @@
 
 <div id="touchUI">
   <div class="tbtn" id="tLeft">◀</div><div class="tbtn" id="tRight">▶</div>
+  <div class="tbtn" id="tUp">▲</div><div class="tbtn" id="tDown">▼</div>
   <div class="tbtn" id="tJump">JMP</div><div class="tbtn" id="tAtk">ATK</div>
   <div class="tbtn" id="tAxe">AXE</div><div class="tbtn" id="tAct">E</div>
   <div class="tbtn" id="tChat">BOTREUS</div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.149.0/three.min.js"></script>
 <script src="game.js"></script>
 </body>
 </html>
