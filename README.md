@@ -1,16 +1,18 @@
+[README.md](https://github.com/user-attachments/files/29745800/README.md)
 # The Automation Saga
 
-A God of War–style 2.5D action portfolio game. You play **Warrior-Taha** wielding the
-**Automation Axe** (throw it — it works even when it leaves your hand), accompanied by
-**BOTREUS**, a floating chatbot companion (the stage persona of GymCRM) who narrates the
-saga and answers questions about Taha.
+A free-roaming **3D portfolio world** (Bruno-Simon-style) with a God of War soul, built in
+Three.js. You play **Warrior-Taha** wielding the **Automation Axe** (throw it — it works
+even when it leaves your hand), accompanied by **BOTREUS**, a floating chatbot companion
+(the stage persona of GymCRM) who narrates the saga and answers questions about Taha.
 
-Four chronological chapters, three boss fights, and the Gates of Valhalla at the end
+Roam a night valley through four chronological career chapters, fight three bosses,
+knock down the CSV-crate bowling alley, and reach the Gates of Valhalla at the end
 with LinkedIn / GitHub / mincac.com / email links.
 
 ## Play locally
 
-No build step — it's a single HTML page + one JS file.
+No build step — a single HTML page + one JS file (Three.js loads from CDN).
 
 ```sh
 cd taha-saga
@@ -22,8 +24,8 @@ python3 -m http.server 4173
 
 | Input | Action |
 |---|---|
-| A / D or ◀ ▶ | Move |
-| W / Space | Jump |
+| W A S D / arrows | Roam the realm |
+| Space | Jump |
 | J | Melee combo (3rd hit is heavy) |
 | K | Throw / recall the Automation Axe |
 | E | Read runestones, open gates |
@@ -33,23 +35,13 @@ Touch controls appear automatically on mobile.
 
 ## Deploy (free)
 
-**Vercel** (fastest):
-```sh
-npx vercel --prod
-```
-
-**GitHub Pages:**
-```sh
-git init && git add . && git commit -m "The Automation Saga"
-gh repo create taha-saga --public --source=. --push
-gh api repos/tahaiftikhar01/taha-saga/pages -X POST -f 'source[branch]=main' -f 'source[path]=/'
-# live at https://tahaiftikhar01.github.io/taha-saga/
-```
+**GitHub Pages:** push to `main`, then Settings → Pages → Deploy from branch → `main` / root.
+Live at `https://tahaiftikhar01.github.io/taha-saga/`.
 
 ## Structure
 
-- `index.html` — markup, CSS, overlays (title, dialog, runestone cards, BOTREUS chat, death, victory), touch UI
-- `game.js` — the whole engine: world/chapter data, dialog script, combat, three bosses, rendering, synth SFX
+- `index.html` — markup, CSS, HUD, overlays (title, dialog, runestone cards, BOTREUS chat, death, victory), touch UI
+- `game.js` — the whole engine: world data, dialog script, free-roam movement, combat, three bosses, CSV bowling, Three.js renderer, synth SFX
 
 ### Editing content
 
